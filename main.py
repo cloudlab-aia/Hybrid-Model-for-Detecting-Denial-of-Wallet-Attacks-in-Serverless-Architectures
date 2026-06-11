@@ -8,16 +8,17 @@ Project structure
 -----------------
   main.py          ← CLI entry point and orchestration  (this file)
   dow/
-    config.py      ← constants, model registries, paper reference values
-    data.py        ← CSV loading, encoding, train/test split
-    augment.py     ← GAN-style dataset augmentation pipeline
-    metrics.py     ← evaluation metrics + all console-output helpers
-    ml_models.py   ← scikit-learn classifiers  (ML)
-    dl_models.py   ← Keras / TensorFlow neural networks  (DL)
+    config.py           ← constants, model registries, paper reference values
+    data.py             ← CSV loading, encoding, train/test split
+    augment.py          ← GAN-style dataset augmentation pipeline
+    metrics.py          ← evaluation metrics + all console-output helpers
+    ml_models.py        ← scikit-learn classifiers  (ML)
+    dl_models.py        ← Keras / TensorFlow neural networks  (DL)
+    cross_validation.py ← Stratified K-Fold CV for ML & DL
 
 Usage
 -----
-  # Without augmentation
+  # Standard single train/test split
   python main.py --model decision_tree
   python main.py --model bilstm --epochs 20
   python main.py --model all_ml
@@ -25,16 +26,17 @@ Usage
   python main.py --model all
   python main.py --model lstm --chronological
   python main.py --model kneighbors --no-scale
-  python main.py --model all --dataset /path/to/data.csv
 
-  # With GAN-style augmentation (recommended for ML models)
+  # Cross-validation
+  python main.py --model all_ml --cv
+  python main.py --model all_dl --cv --epochs 10
+  python main.py --model all    --cv --cv-folds 10
+  python main.py --model decision_tree --cv --cv-folds 5
+
+  # With GAN-style augmentation (standard split only — CV not supported)
   python main.py --model decision_tree --augment
   python main.py --model all_ml --augment
   python main.py --model all --augment --epochs 20
-
-  # Customise augmentation parameters
-  python main.py --model all_ml --augment --aug-n-funcs 80 --aug-n-bot 2000
-  python main.py --model decision_tree --augment --aug-ip-merge 0.20
 """
 
 import argparse
@@ -58,6 +60,7 @@ from dow.config import (
     DEFAULT_EPOCHS,
     TRAIN_RATIO,
 )
+from dow.cross_validation import print_cv_summary, run_cv_all, run_cv_dl, run_cv_ml
 from dow.data import load_and_split, load_raw
 from dow.dl_models import run_dl
 from dow.metrics import print_summary
@@ -134,19 +137,33 @@ Available models
 
 Quick examples
 --------------
-  # Standard run (original dataset)
+  # Standard run (single 70/30 split)
   python main.py --model all_ml
   python main.py --model bilstm --epochs 20
 
-  # With GAN augmentation (improves ML precision and TPR@5%FPR)
+  # Cross-validation
+  python main.py --model all_ml --cv
+  python main.py --model all_dl --cv --epochs 10
+  python main.py --model all    --cv --cv-folds 10
+
+  # With GAN augmentation (standard split only — not compatible with --cv)
   python main.py --model all_ml --augment
   python main.py --model all --augment --epochs 20
-
-  # Custom augmentation parameters
-  python main.py --model decision_tree --augment --aug-n-funcs 80 --aug-n-bot 2000
-  python main.py --model all_ml --augment --aug-ip-merge 0.10 --aug-stealth-ip 0.50
         """,
     )
+
+    # Cross-validation
+    p.add_argument("--cv", action="store_true",
+                   help=(
+                       "Run Stratified K-Fold cross-validation instead of a\n"
+                       "single train/test split.  Produces mean ± std for all\n"
+                       "8 metrics.  Use with any model\n"
+                       "or group (all_ml, all_dl, all).\n"
+                       "Example: python main.py --model all_ml --cv\n"
+                       "         python main.py --model all --cv --cv-folds 10\n"
+                   ))
+    p.add_argument("--cv-folds", type=int, default=5, metavar="K",
+                   help="Number of CV folds  (default: 5).")
 
     # Core options
     p.add_argument("--model",   required=True, metavar="NAME",
@@ -218,6 +235,56 @@ def main() -> None:
     split_label = "Chronological" if args.chronological else "Stratified random"
     _print_header(to_run, args.dataset, split_label, args.epochs, args.augment, aug_cfg)
 
+    # Cross-validation mode
+    if args.cv:
+        if args.augment:
+            print(
+                "[WARN] --augment is not supported with --cv. "
+                "Loading original dataset for CV.\n"
+            )
+
+        # CV needs the full dataset (not pre-split); load_and_split is not used
+        print(f"\n[DATA] Loading '{args.dataset}' for cross-validation …",
+              flush=True)
+        import pandas as pd
+        from sklearn.preprocessing import LabelEncoder
+        from dow.config import NON_FEATURE_COLS, TARGET_COL
+
+        df = pd.read_csv(args.dataset)
+        for col in df.select_dtypes(include=["object", "string"]).columns:
+            df[col] = LabelEncoder().fit_transform(df[col].astype(str))
+
+        feat_cols = [c for c in df.columns if c not in NON_FEATURE_COLS]
+        X_all = df[feat_cols].values.astype("float32")
+        y_all = df[TARGET_COL].astype(int).values
+        n_attack = int(y_all.sum())
+        print(
+            f"[DATA] {len(X_all):,} rows  ·  {len(feat_cols)} features  ·  "
+            f"attack ratio {n_attack/len(y_all)*100:.1f}%"
+        )
+
+        _sep()
+        print(
+            f"  DoW Attack Detector – Cross-Validation Mode\n"
+            f"  Models  : {to_run}\n"
+            f"  Folds   : {args.cv_folds}-fold Stratified K-Fold\n"
+            f"  Dataset : {args.dataset}"
+        )
+        _sep()
+
+        cv_results = run_cv_all(
+            names     = to_run,
+            X         = X_all,
+            y         = y_all,
+            n_splits  = args.cv_folds,
+            use_scale = use_scale,
+            epochs    = args.epochs,
+        )
+
+        print_cv_summary(cv_results)
+        return   # CV path ends here
+
+    # Standard single-split mode
     # Load dataset (augmented or original)
     if args.augment:
         df_raw = load_raw(args.dataset)
