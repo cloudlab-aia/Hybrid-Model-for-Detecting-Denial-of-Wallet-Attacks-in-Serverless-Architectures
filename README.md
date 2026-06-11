@@ -472,6 +472,7 @@ python main.py --model decision_tree --augment --aug-noise 0.10  # stronger
 ## 10. Stratified K-Fold cross-validation for ML and DL classifiers
 
 # All ML classifiers with 10-fold CV
+```bash
 python main.py --model all_ml --cv --cv-folds 10
 
 ==========================================================================
@@ -662,6 +663,7 @@ python main.py --model all --cv --cv-folds 10
 # One model with 5-fold CV
 python main.py --model bilstm --cv
 python main.py --model decision_tree --cv --cv-folds 5
+```
 
 ## 11. Reproducibility notes
 
