@@ -18,7 +18,8 @@ augmentation** pipeline.
 7. [Available models and CLI options](#7-available-models-and-cli-options)
 8. [Running with augmentation](#8-running-with-augmentation)
 9. [Augmentation parameters in detail](#9-augmentation-parameters-in-detail)
-10. [Reproducibility notes](#10-reproducibility-notes)
+10. [Stratified K-Fold cross-validation for ML and DL classifiers](#10-Stratified K-Fold cross-validation for ML and DL classifiers)
+11. [Reproducibility notes](#11-reproducibility-notes)
 
 
 ---
@@ -38,6 +39,7 @@ dow-detector/
 │   ├── augment.py           ← GAN-style augmentation pipeline
 │   ├── metrics.py           ← metric computation and console output
 │   ├── ml_models.py         ← scikit-learn classifiers
+|   ├── cross_validation.py  ← Stratified K-Fold cross-validation for ML and DL classifiers
 │   └── dl_models.py         ← Keras / TensorFlow neural networks
 │
 ├── requirements.txt
@@ -467,7 +469,201 @@ python main.py --model decision_tree --augment --aug-noise 0.10  # stronger
 
 ---
 
-## 10. Reproducibility notes
+## 10. Stratified K-Fold cross-validation for ML and DL classifiers
+
+# All ML classifiers with 10-fold CV
+python main.py --model all_ml --cv --cv-folds 10
+
+==========================================================================
+  DoW Attack Detector – Stage 2 Classifier
+  Research: 'Hybrid Model for Detecting Denial of Wallet Attacks'
+==========================================================================
+  Models       : ['decision_tree', 'random_forest', 'gradient_boosting', 'naive_bayes', 'kneighbors']
+  Dataset      : dataset.csv
+  Split mode   : Stratified random  (70% train / 30% test)
+  DL epochs    : 20
+  Augmentation : OFF  (use --augment to enable)
+==========================================================================
+
+[DATA] Loading 'dataset.csv' for cross-validation …
+[DATA] 187,087 rows  ·  16 features  ·  attack ratio 70.1%
+==========================================================================
+  DoW Attack Detector – Cross-Validation Mode
+  Models  : ['decision_tree', 'random_forest', 'gradient_boosting', 'naive_bayes', 'kneighbors']
+  Folds   : 10-fold Stratified K-Fold
+  Dataset : dataset.csv
+==========================================================================
+==========================================================================
+  CROSS-VALIDATION : DECISION_TREE
+  Folds   : 10-fold Stratified K-Fold
+  Samples : 187,087
+--------------------------------------------------------------------------
+  Fold  1 │ Prec 0.8448  Rec 0.8364  F1 0.8406  Acc 0.7777  ROC 0.8676  PR 0.9390  T@1% 0.4847  T@5% 0.5769
+  Fold  2 │ Prec 0.8342  Rec 0.8566  F1 0.8453  Acc 0.7803  ROC 0.8612  PR 0.9350  T@1% 0.5052  T@5% 0.5512
+  Fold  3 │ Prec 0.8212  Rec 0.8647  F1 0.8424  Acc 0.7733  ROC 0.8565  PR 0.9351  T@1% 0.4798  T@5% 0.5716
+  Fold  4 │ Prec 0.8317  Rec 0.8218  F1 0.8267  Acc 0.7586  ROC 0.8603  PR 0.9372  T@1% 0.4297  T@5% 0.5938
+  Fold  5 │ Prec 0.8459  Rec 0.8395  F1 0.8427  Acc 0.7804  ROC 0.8702  PR 0.9387  T@1% 0.4730  T@5% 0.5624
+  Fold  6 │ Prec 0.8356  Rec 0.8627  F1 0.8489  Acc 0.7849  ROC 0.8623  PR 0.9360  T@1% 0.4626  T@5% 0.5632
+  Fold  7 │ Prec 0.8513  Rec 0.8334  F1 0.8423  Acc 0.7813  ROC 0.8690  PR 0.9374  T@1% 0.4684  T@5% 0.5400
+  Fold  8 │ Prec 0.8553  Rec 0.7792  F1 0.8155  Acc 0.7529  ROC 0.8665  PR 0.9392  T@1% 0.4707  T@5% 0.5855
+  Fold  9 │ Prec 0.8432  Rec 0.8534  F1 0.8482  Acc 0.7861  ROC 0.8735  PR 0.9406  T@1% 0.4664  T@5% 0.5419
+  Fold 10 │ Prec 0.8402  Rec 0.8109  F1 0.8253  Acc 0.7595  ROC 0.8556  PR 0.9292  T@1% 0.4281  T@5% 0.5373
+--------------------------------------------------------------------------
+  Metric                       Mean        ±Std
+--------------------------------------------------------------------------
+  Precision                  0.8403  ±  0.0095
+  Recall                     0.8359  ±  0.0252
+  F1-score                   0.8378  ±  0.0107
+  Accuracy                   0.7735  ±  0.0114
+  ROC-AUC                    0.8643  ±  0.0057
+  PR-AUC                     0.9367  ±  0.0031
+  TPR@1%FPR                  0.4669  ±  0.0222
+  TPR@5%FPR                  0.5624  ±  0.0187
+--------------------------------------------------------------------------
+  Total CV time : 6.2s
+==========================================================================
+==========================================================================
+  CROSS-VALIDATION : RANDOM_FOREST
+  Folds   : 10-fold Stratified K-Fold
+  Samples : 187,087
+--------------------------------------------------------------------------
+  Fold  1 │ Prec 0.7509  Rec 0.9988  F1 0.8573  Acc 0.7670  ROC 0.8392  PR 0.9225  T@1% 0.2908  T@5% 0.4592
+  Fold  2 │ Prec 0.7582  Rec 0.9989  F1 0.8620  Acc 0.7760  ROC 0.8459  PR 0.9258  T@1% 0.2856  T@5% 0.4600
+  Fold  3 │ Prec 0.7568  Rec 0.9997  F1 0.8615  Acc 0.7748  ROC 0.8458  PR 0.9260  T@1% 0.2943  T@5% 0.4633
+  Fold  4 │ Prec 0.7530  Rec 0.9996  F1 0.8590  Acc 0.7701  ROC 0.8427  PR 0.9240  T@1% 0.2844  T@5% 0.4508
+  Fold  5 │ Prec 0.7578  Rec 0.9996  F1 0.8621  Acc 0.7759  ROC 0.8471  PR 0.9258  T@1% 0.2708  T@5% 0.4549
+  Fold  6 │ Prec 0.7576  Rec 0.9996  F1 0.8620  Acc 0.7757  ROC 0.8442  PR 0.9254  T@1% 0.2894  T@5% 0.4553
+  Fold  7 │ Prec 0.7558  Rec 0.9991  F1 0.8606  Acc 0.7733  ROC 0.8460  PR 0.9253  T@1% 0.2808  T@5% 0.4458
+  Fold  8 │ Prec 0.7585  Rec 0.9986  F1 0.8622  Acc 0.7763  ROC 0.8486  PR 0.9255  T@1% 0.2873  T@5% 0.4607
+  Fold  9 │ Prec 0.7621  Rec 0.9996  F1 0.8648  Acc 0.7811  ROC 0.8442  PR 0.9242  T@1% 0.2930  T@5% 0.4449
+  Fold 10 │ Prec 0.7574  Rec 0.9997  F1 0.8619  Acc 0.7755  ROC 0.8459  PR 0.9257  T@1% 0.2647  T@5% 0.4617
+--------------------------------------------------------------------------
+  Metric                       Mean        ±Std
+--------------------------------------------------------------------------
+  Precision                  0.7568  ±  0.0029
+  Recall                     0.9993  ±  0.0004
+  F1-score                   0.8613  ±  0.0019
+  Accuracy                   0.7746  ±  0.0036
+  ROC-AUC                    0.8450  ±  0.0025
+  PR-AUC                     0.9250  ±  0.0011
+  TPR@1%FPR                  0.2841  ±  0.0091
+  TPR@5%FPR                  0.4557  ±  0.0062
+--------------------------------------------------------------------------
+  Total CV time : 10.4s
+==========================================================================
+==========================================================================
+  CROSS-VALIDATION : GRADIENT_BOOSTING
+  Folds   : 10-fold Stratified K-Fold
+  Samples : 187,087
+--------------------------------------------------------------------------
+  Fold  1 │ Prec 0.8810  Rec 1.0000  F1 0.9368  Acc 0.9054  ROC 0.9688  PR 0.9834  T@1% 0.4573  T@5% 0.7704
+  Fold  2 │ Prec 0.8900  Rec 0.9986  F1 0.9412  Acc 0.9126  ROC 0.9753  PR 0.9869  T@1% 0.4687  T@5% 0.8371
+  Fold  3 │ Prec 0.8924  Rec 1.0000  F1 0.9431  Acc 0.9155  ROC 0.9776  PR 0.9882  T@1% 0.5268  T@5% 0.8305
+  Fold  4 │ Prec 0.8763  Rec 1.0000  F1 0.9341  Acc 0.9011  ROC 0.9751  PR 0.9869  T@1% 0.5126  T@5% 0.8398
+  Fold  5 │ Prec 0.8842  Rec 1.0000  F1 0.9386  Acc 0.9083  ROC 0.9752  PR 0.9865  T@1% 0.4893  T@5% 0.8582
+  Fold  6 │ Prec 0.8959  Rec 1.0000  F1 0.9451  Acc 0.9186  ROC 0.9756  PR 0.9872  T@1% 0.5153  T@5% 0.8254
+  Fold  7 │ Prec 0.8899  Rec 1.0000  F1 0.9418  Acc 0.9134  ROC 0.9759  PR 0.9873  T@1% 0.4894  T@5% 0.8414
+  Fold  8 │ Prec 0.8867  Rec 1.0000  F1 0.9399  Acc 0.9105  ROC 0.9745  PR 0.9865  T@1% 0.4845  T@5% 0.8132
+  Fold  9 │ Prec 0.8876  Rec 1.0000  F1 0.9405  Acc 0.9113  ROC 0.9733  PR 0.9857  T@1% 0.4675  T@5% 0.8151
+  Fold 10 │ Prec 0.8835  Rec 0.9992  F1 0.9378  Acc 0.9072  ROC 0.9753  PR 0.9871  T@1% 0.5075  T@5% 0.8201
+--------------------------------------------------------------------------
+  Metric                       Mean        ±Std
+--------------------------------------------------------------------------
+  Precision                  0.8868  ±  0.0054
+  Recall                     0.9998  ±  0.0005
+  F1-score                   0.9399  ±  0.0030
+  Accuracy                   0.9104  ±  0.0048
+  ROC-AUC                    0.9747  ±  0.0022
+  PR-AUC                     0.9866  ±  0.0012
+  TPR@1%FPR                  0.4919  ±  0.0220
+  TPR@5%FPR                  0.8251  ±  0.0224
+--------------------------------------------------------------------------
+  Total CV time : 192.9s
+==========================================================================
+==========================================================================
+  CROSS-VALIDATION : NAIVE_BAYES
+  Folds   : 10-fold Stratified K-Fold
+  Samples : 187,087
+--------------------------------------------------------------------------
+  Fold  1 │ Prec 0.8182  Rec 0.5790  F1 0.6781  Acc 0.6149  ROC 0.6780  PR 0.8453  T@1% 0.1086  T@5% 0.2890
+  Fold  2 │ Prec 0.8197  Rec 0.5803  F1 0.6795  Acc 0.6165  ROC 0.6830  PR 0.8474  T@1% 0.1096  T@5% 0.2999
+  Fold  3 │ Prec 0.8220  Rec 0.5708  F1 0.6738  Acc 0.6128  ROC 0.6777  PR 0.8446  T@1% 0.1113  T@5% 0.2935
+  Fold  4 │ Prec 0.8179  Rec 0.5709  F1 0.6724  Acc 0.6103  ROC 0.6760  PR 0.8454  T@1% 0.1159  T@5% 0.2976
+  Fold  5 │ Prec 0.8224  Rec 0.5815  F1 0.6813  Acc 0.6188  ROC 0.6824  PR 0.8464  T@1% 0.1115  T@5% 0.2944
+  Fold  6 │ Prec 0.8186  Rec 0.5721  F1 0.6735  Acc 0.6114  ROC 0.6794  PR 0.8461  T@1% 0.1121  T@5% 0.2959
+  Fold  7 │ Prec 0.8216  Rec 0.5743  F1 0.6761  Acc 0.6144  ROC 0.6802  PR 0.8448  T@1% 0.1086  T@5% 0.2842
+  Fold  8 │ Prec 0.8189  Rec 0.5682  F1 0.6709  Acc 0.6094  ROC 0.6778  PR 0.8462  T@1% 0.1143  T@5% 0.3025
+  Fold  9 │ Prec 0.8258  Rec 0.5725  F1 0.6762  Acc 0.6159  ROC 0.6800  PR 0.8453  T@1% 0.1098  T@5% 0.2919
+  Fold 10 │ Prec 0.8201  Rec 0.5736  F1 0.6750  Acc 0.6131  ROC 0.6824  PR 0.8493  T@1% 0.1082  T@5% 0.3056
+--------------------------------------------------------------------------
+  Metric                       Mean        ±Std
+--------------------------------------------------------------------------
+  Precision                  0.8205  ±  0.0023
+  Recall                     0.5743  ±  0.0042
+  F1-score                   0.6757  ±  0.0031
+  Accuracy                   0.6138  ±  0.0028
+  ROC-AUC                    0.6797  ±  0.0022
+  PR-AUC                     0.8461  ±  0.0013
+  TPR@1%FPR                  0.1110  ±  0.0024
+  TPR@5%FPR                  0.2955  ±  0.0060
+--------------------------------------------------------------------------
+  Total CV time : 0.6s
+==========================================================================
+==========================================================================
+  CROSS-VALIDATION : KNEIGHBORS
+  Folds   : 10-fold Stratified K-Fold
+  Samples : 187,087
+--------------------------------------------------------------------------
+  Fold  1 │ Prec 0.9352  Rec 1.0000  F1 0.9665  Acc 0.9514  ROC 0.9652  PR 0.9711  T@1% 0.0000  T@5% 0.9998
+  Fold  2 │ Prec 0.9366  Rec 1.0000  F1 0.9673  Acc 0.9526  ROC 0.9648  PR 0.9708  T@1% 0.0000  T@5% 0.9998
+  Fold  3 │ Prec 0.9393  Rec 1.0000  F1 0.9687  Acc 0.9547  ROC 0.9671  PR 0.9727  T@1% 0.0000  T@5% 0.9998
+  Fold  4 │ Prec 0.9373  Rec 1.0000  F1 0.9676  Acc 0.9531  ROC 0.9629  PR 0.9693  T@1% 0.0000  T@5% 0.9997
+  Fold  5 │ Prec 0.9377  Rec 1.0000  F1 0.9678  Acc 0.9534  ROC 0.9669  PR 0.9725  T@1% 0.0000  T@5% 0.9998
+  Fold  6 │ Prec 0.9362  Rec 1.0000  F1 0.9671  Acc 0.9523  ROC 0.9671  PR 0.9727  T@1% 0.0000  T@5% 0.9998
+  Fold  7 │ Prec 0.9364  Rec 1.0000  F1 0.9672  Acc 0.9524  ROC 0.9642  PR 0.9703  T@1% 0.0000  T@5% 0.9995
+  Fold  8 │ Prec 0.9377  Rec 1.0000  F1 0.9678  Acc 0.9534  ROC 0.9675  PR 0.9730  T@1% 0.0000  T@5% 0.9997
+  Fold  9 │ Prec 0.9339  Rec 1.0000  F1 0.9658  Acc 0.9504  ROC 0.9649  PR 0.9709  T@1% 0.0000  T@5% 0.9996
+  Fold 10 │ Prec 0.9339  Rec 1.0000  F1 0.9658  Acc 0.9504  ROC 0.9622  PR 0.9687  T@1% 0.0000  T@5% 0.9995
+--------------------------------------------------------------------------
+  Metric                       Mean        ±Std
+--------------------------------------------------------------------------
+  Precision                  0.9364  ±  0.0016
+  Recall                     1.0000  ±  0.0000
+  F1-score                   0.9672  ±  0.0009
+  Accuracy                   0.9524  ±  0.0013
+  ROC-AUC                    0.9653  ±  0.0018
+  PR-AUC                     0.9712  ±  0.0014
+  TPR@1%FPR                  0.0000  ±  0.0000
+  TPR@5%FPR                  0.9997  ±  0.0001
+--------------------------------------------------------------------------
+  Total CV time : 15.0s
+==========================================================================
+==========================================================================
+  CROSS-VALIDATION SUMMARY  (mean ± std across folds)
+--------------------------------------------------------------------------
+  Model                   Precision       Recall           F1    Acc(Test)      ROC-AUC       PR-AUC    TPR@1%FPR    TPR@5%FPR
+--------------------------------------------------------------------------
+  decision_tree        0.8403±0.0095  0.8359±0.0252  0.8378±0.0107  0.7735±0.0114  0.8643±0.0057  0.9367±0.0031  0.4669±0.0222  0.5624±0.0187
+  random_forest        0.7568±0.0029  0.9993±0.0004  0.8613±0.0019  0.7746±0.0036  0.8450±0.0025  0.9250±0.0011  0.2841±0.0091  0.4557±0.0062
+  gradient_boosting    0.8868±0.0054  0.9998±0.0005  0.9399±0.0030  0.9104±0.0048  0.9747±0.0022  0.9866±0.0012  0.4919±0.0220  0.8251±0.0224
+  naive_bayes          0.8205±0.0023  0.5743±0.0042  0.6757±0.0031  0.6138±0.0028  0.6797±0.0022  0.8461±0.0013  0.1110±0.0024  0.2955±0.0060
+  kneighbors           0.9364±0.0016  1.0000±0.0000  0.9672±0.0009  0.9524±0.0013  0.9653±0.0018  0.9712±0.0014  0.0000±0.0000  0.9997±0.0001
+==========================================================================
+  Note: values formatted as mean±std  (e.g. 0.9360±0.0041 means mean=0.9360, std=0.0041)
+==========================================================================
+
+
+# All DL classifiers with 5-fold CV(with early stopping)
+python main.py --model all_dl --cv --epochs 20
+
+# All ML and DL classifiers with 10-fold CV
+python main.py --model all --cv --cv-folds 10
+
+# One model with 5-fold CV
+python main.py --model bilstm --cv
+python main.py --model decision_tree --cv --cv-folds 5
+
+## 11. Reproducibility notes
 
 | Aspect | Detail |
 |---|---|
@@ -478,5 +674,4 @@ python main.py --model decision_tree --augment --aug-noise 0.10  # stronger
 | **Early stopping (DL)** | `patience=3` on `val_loss`, 10% of training set as validation. |
 
 ---
-
 
